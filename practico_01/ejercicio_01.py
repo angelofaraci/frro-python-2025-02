@@ -33,7 +33,7 @@ assert maximo_libreria(9, 18) == 18
 
 
 def maximo_ternario(a: float, b: float) -> float:
-       return a if a>b else return b
+       return (a if a>b else b)
 
 
 # NO MODIFICAR - INICIO
