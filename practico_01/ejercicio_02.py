@@ -51,22 +51,14 @@ assert maximo_arbitrario(24, 9, 18, 30) == 30
 
 ###############################################################################
 
-
 def maximo_recursivo(*args) -> float:
-    print(type(args))
-    print(args)
-    if len(args) == 2:
-        return (args[0] if args[0]>args[1] else args[1])
-    elif args[0]>args[-1]:
-        print(args[0])
-        maximo_recursivo(*args[:-1])
-    else:
-        print(args[1:])
-        maximo_recursivo(*args[1:])
-    
-print (maximo_recursivo(1,2,3,120))
-
-
+    if len(args) == 1:
+        if isinstance(args[0], (list, tuple)):
+            return maximo_recursivo(*args[0])
+        return args[0]
+    primer_elemento = args[0]
+    maximo_resto = maximo_recursivo(*args[1:])
+    return primer_elemento if primer_elemento > maximo_resto else maximo_resto
 # NO MODIFICAR - INICIO
 assert maximo_recursivo(1, 10, 5, -5) == 10
 assert maximo_recursivo(4, 9, 18, 6) == 18
