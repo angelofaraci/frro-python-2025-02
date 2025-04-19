@@ -8,9 +8,14 @@ from ejercicio_01 import reset_tabla
 def agregar_persona(nombre, nacimiento, dni, altura):
     """Implementar la funcion agregar_persona, que inserte un registro en la 
     tabla Persona y devuelva los datos ingresados el id del nuevo registro."""
-    db= sqlite3.connect('db.db')
+    db = sqlite3.connect('db.db')
     cursor = db.cursor()
-    cursor.execute("""INSERT INTO Persona (nombre, FechaNacimiento, DNI, Altura) VALUES (?,?,?,?)""", (nombre, nacimiento, dni, altura))
+    # Convert datetime to string in ISO format
+    nacimiento_str = nacimiento.strftime('%Y-%m-%d')
+    cursor.execute(
+        """INSERT INTO Persona (nombre, FechaNacimiento, DNI, Altura) VALUES (?,?,?,?)""",
+        (nombre, nacimiento_str, dni, altura)
+    )
     db.commit()
     db.close()
     return cursor.lastrowid
