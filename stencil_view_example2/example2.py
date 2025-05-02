@@ -1,15 +1,3 @@
-'''
-Stencil demo
-============
-
-This is a test of the stencil graphics instruction inside the stencil view
-widget. When you use a stencil, nothing will be drawn outside the bounding
-box. All the graphics will draw only in the stencil view.
-
-You can "draw" a stencil view by touch & draw. The touch down will set the
-position, and the drag will set the size.
-'''
-
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.graphics import Color, Rectangle
@@ -23,15 +11,13 @@ from functools import partial
 
 
 class StencilTestWidget(StencilView):
-    '''Drag to define stencil area
-    '''
 
     def on_touch_down(self, touch):
         self.pos = touch.pos
-        self.size = (1, 1)
+        self.size = (50, 50)
 
     def on_touch_move(self, touch):
-        self.size = (touch.x - touch.ox, touch.y - touch.oy)
+        self.pos = touch.pos
 
 
 class StencilCanvasApp(App):

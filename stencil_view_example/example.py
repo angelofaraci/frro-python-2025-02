@@ -1,33 +1,64 @@
 from kivy.app import App
-from kivy.uix.stencilview import StencilView
-from kivy.uix.image import Image
+from kivy.core.window import Window
+from kivy.graphics import Color, Rectangle
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.button import Button
+from kivy.uix.label import Label
+from kivy.uix.stencilview import StencilView
+from random import random as r
+from functools import partial
+from kivy.uix.image import Image    
 
-class StencilViewExample(App):
+
+class StencilCanvasApp(App):
+
+    def add_rects(self, label, wid, count, *largs):
+        img = Image(source='../stencil_view_example/example_image0.jpg')
+        img.size = (wid.width, wid.height)
+        wid.add_widget(img)
+        label.text = str(int(label.text) + count)
+        with wid.canvas:
+            for x in range(count):
+                Color(r(), 1, 1, mode='hsv')
+                Rectangle(pos=(r() * wid.width + wid.x,
+                               r() * wid.height + wid.y), size=(10, 10))
+
+    def reset_stencil(self, wid, *largs):
+        wid.pos = (0, 0)
+        wid.size = Window.size
+
+    def reset_rects(self, label, wid, *largs):
+        label.text = '0'
+        wid.canvas.clear()
+
     def build(self):
-        image_width = 400
-        image_height = 400
-        layout = BoxLayout(orientation='vertical')
-        def imageSizer(self):
-            image.size = (image.size[0] + self.num, image.size[1] + self.num)
-            return imageSizer
-        # Create a StencilView
-        stencil = StencilView(size_hint=(1, None), size=(400, 400))
-        
-        # Add an image inside the StencilView
-        image = Image(source='example_image.jpg', size_hint=(None, None), size=(image_width, image_height), pos_hint=(0, 0))
-        stencil.add_widget(image)
-        add_button = Button(text='add size', size_hint=(None, None), size=(100, 50))
-        add_button.num = 50
-        reduce_button = Button(text='reduce size', size_hint=(None, None), size=(100, 50))
-        reduce_button.num = -50
-        add_button.bind(on_press=imageSizer) 
-        reduce_button.bind(on_press=imageSizer) 
-        layout.add_widget(stencil)
-        layout.add_widget(add_button)
-        layout.add_widget(reduce_button)
-        return layout
+        wid = StencilTestWidget(size_hint=(None, None), size=Window.size)
+        wid.init()
+        label = Label(text='0')
+
+        btn_add500 = Button(text='+ 200 rects')
+        btn_add500.bind(on_press=partial(self.add_rects, label, wid, 200))
+
+        btn_reset = Button(text='Reset Rectangles')
+        btn_reset.bind(on_press=partial(self.reset_rects, label, wid))
+
+        btn_stencil = Button(text='Reset Stencil')
+        btn_stencil.bind(on_press=partial(self.reset_stencil, wid))
+
+        layout = BoxLayout(size_hint=(1, None), height=50)
+        layout.add_widget(btn_add500)
+        layout.add_widget(btn_reset)
+        layout.add_widget(btn_stencil)
+        layout.add_widget(label)
+        root = BoxLayout(orientation='vertical')
+        rfl = FloatLayout()
+        rfl.add_widget(wid)
+        root.add_widget(rfl)
+        root.add_widget(layout)
+
+        return root
+
 
 if __name__ == '__main__':
-    StencilViewExample().run()
+    StencilCanvasApp().run()
