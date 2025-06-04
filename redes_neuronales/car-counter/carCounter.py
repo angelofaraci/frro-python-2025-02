@@ -3,22 +3,22 @@ import numpy as np
 
 # Ruta al video
 
-cap = cv2.VideoCapture("carretera_video.mp4")
+cap = cv2.VideoCapture("redes_neuronales/car-counter/carretera_video.mp4")
 frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
 if not cap.isOpened():
     print("Error al abrir el video.")
     exit()
 # Línea virtual para contar autos (ajusta según el video)
-linea_entrada = 200
-linea_salida = 400
-offset = 10  # margen de error para el cruce de línea
+linea_entrada = 1000
+linea_salida = 100
+offset = 7  # margen de error para el cruce de línea
 
 contador_entrada = 0
 contador_salida = 0
 
 # Substractor de fondo para detectar movimiento
-fgbg = cv2.createBackgroundSubtractorMOG2()
+fgbg = cv2.createBackgroundSubtractorMOG2(10, 600, False)
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -27,12 +27,11 @@ while cap.isOpened():
 
     # Preprocesamiento
     fgmask = fgbg.apply(frame)
-    _, thresh = cv2.threshold(fgmask, 200, 255, cv2.THRESH_BINARY)
-    dilated = cv2.dilate(thresh, np.ones((5,5)), iterations=2)
+    dilated = cv2.dilate(fgmask, np.ones((6,6)), iterations=2)
     contours, _ = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    cv2.line(frame, (0, linea_entrada), (frame.shape[1], linea_entrada), (0,255,0), 2)
-    cv2.line(frame, (0, linea_salida), (frame.shape[1], linea_salida), (0,0,255), 2)
+    cv2.line(frame, (0, linea_entrada), (frame.shape[1], linea_entrada), (0,255,0), offset)
+    cv2.line(frame, (0, linea_salida), (frame.shape[1], linea_salida), (0,0,255), offset)
 
     for cnt in contours:
         area = cv2.contourArea(cnt)
@@ -56,6 +55,8 @@ while cap.isOpened():
     cv2.putText(frame, f'Salidas: {contador_salida}', (10,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
 
     cv2.imshow('Contador de Autos', frame)
+    cv2.imshow('Mascara de Fondo', fgmask)
+    cv2.imshow('Dilated', dilated)
     if cv2.waitKey(30) & 0xFF == 27:
         break
 
