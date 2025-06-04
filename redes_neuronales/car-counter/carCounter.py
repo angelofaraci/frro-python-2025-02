@@ -10,15 +10,21 @@ if not cap.isOpened():
     print("Error al abrir el video.")
     exit()
 # Línea virtual para contar autos (ajusta según el video)
-linea_entrada = 1000
-linea_salida = 100
-offset = 7  # margen de error para el cruce de línea
+linea_inferior = 1000
+linea_superior = 100
+linea_división = 970
+offset = 4  # margen de error para el cruce de línea
 
-contador_entrada = 0
-contador_salida = 0
+# Contadores para entradas y salidas
+contador_entrante = 0
+contador_saliente = 0
+contador_entrante_abajo = 0
+contador_entrante_arriba = 0
+contador_saliente_abajo = 0
+contador_saliente_arriba = 0
 
 # Substractor de fondo para detectar movimiento
-fgbg = cv2.createBackgroundSubtractorMOG2(10, 600, False)
+fgbg = cv2.createBackgroundSubtractorMOG2(10, 1000, True)
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -27,12 +33,14 @@ while cap.isOpened():
 
     # Preprocesamiento
     fgmask = fgbg.apply(frame)
-    dilated = cv2.dilate(fgmask, np.ones((6,6)), iterations=2)
+    dilated = cv2.dilate(fgmask, np.ones((3,3)), iterations=4)
     contours, _ = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    cv2.line(frame, (0, linea_entrada), (frame.shape[1], linea_entrada), (0,255,0), offset)
-    cv2.line(frame, (0, linea_salida), (frame.shape[1], linea_salida), (0,0,255), offset)
-
+    cv2.line(frame, (0, linea_inferior), (frame.shape[1], linea_inferior), (0,255,0), offset)
+    cv2.line(frame, (0, linea_superior), (frame.shape[1], linea_superior), (0,0,255), offset)
+    cv2.line(frame, (linea_división,0), (linea_división+30, frame.shape[1]), (255,0,0), offset)
+    
+  
     for cnt in contours:
         area = cv2.contourArea(cnt)
         if area > 500:  # filtra objetos pequeños
@@ -42,21 +50,39 @@ while cap.isOpened():
             cv2.rectangle(frame, (x, y), (x+w, y+h), (255,0,0), 2)
             cv2.circle(frame, (cx, cy), 5, (0,255,255), -1)
 
-            # Conteo de entrada
-            if (linea_entrada - offset) < cy < (linea_entrada + offset):
-                contador_entrada += 1
-                print(f'Auto entrante: {contador_entrada}')
-            # Conteo de salida
-            if (linea_salida - offset) < cy < (linea_salida + offset):
-                contador_salida += 1
-                print(f'Auto saliendo: {contador_salida}')
+            # Conteo de entradas por abajo
+            if (linea_inferior - offset) < cy < (linea_inferior + offset) and cx > linea_división:
+                contador_entrante_abajo +=1
+                contador_entrante += 1
+                print(f'Auto entrante abajo: {contador_entrante}')
+            # Conteo de salidas por abajo
+            if (linea_inferior - offset) < cy < (linea_inferior + offset) and cx < linea_división:
+                counted_salida = True
+                contador_saliente_abajo +=1
+                contador_saliente += 1
+                print(f'Auto entrante abajo: {contador_entrante}')
+            # Conteo de entradas por arriba
+            if (linea_superior - offset) < cy < (linea_superior + offset) and cx < linea_división:
+                contador_entrante_arriba += 1
+                contador_entrante += 1
+                print(f'Auto saliendo: {contador_saliente}')
+            
+            if (linea_superior - offset) < cy < (linea_superior + offset) and cx > linea_división:
+                contador_saliente_arriba += 1
+                contador_saliente += 1
+                print(f'Auto saliendo: {contador_saliente}')
+ 
+    cv2.putText(frame, f'entradas: {contador_entrante}', (10,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+    cv2.putText(frame, f'salidas: {contador_saliente}', (10,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+    cv2.putText(frame, f'entradas abajo: {contador_entrante_abajo}', (10,150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+    cv2.putText(frame, f'salientes abajo: {contador_saliente_abajo}', (10,200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+    cv2.putText(frame, f'entradas arriba: {contador_entrante_arriba}', (10,250), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+    cv2.putText(frame, f'salidas arriba: {contador_saliente_arriba}', (10,300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
 
-    cv2.putText(frame, f'Entradas: {contador_entrada}', (10,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
-    cv2.putText(frame, f'Salidas: {contador_salida}', (10,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
-
-    cv2.imshow('Contador de Autos', frame)
-    cv2.imshow('Mascara de Fondo', fgmask)
     cv2.imshow('Dilated', dilated)
+    cv2.imshow('Mascara de Fondo', fgmask)
+    cv2.imshow('Contador de Autos', frame)
+    
     if cv2.waitKey(30) & 0xFF == 27:
         break
 
